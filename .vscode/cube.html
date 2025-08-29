@@ -4,10 +4,12 @@
 <style>
 body {
 	text-align: center;
-	background: #ccc;
+	background: rgb(38, 7, 51);
 	text-rendering: optimizeSpeed;
 	-webkit-font-smoothing: none;
 	-moz-osx-font-smoothing: unset;
+    color: rgb(255, 225, 225);
+
 }
 #canvas {
 	font-family: Courier, "Courier New", monospace;
@@ -131,7 +133,7 @@ function render()
 	var t = '';
 	buffer.forEach(function(row) {
 		row.forEach(function(cell) {
-			t += cell===true?'▀':'.';
+			t += cell===true?'▀':' ';
 		}, t);
 		t += "\n";
 	}, t);
