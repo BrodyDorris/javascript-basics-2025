@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Square Game</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #333;
+            color: #fff;
+            font-family: monospace;
+            text-align: center;
+        }
+        canvas {
+            background: #111;
+            border: 2px solid #555;
+        }
+        #game-over-screen {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            z-index: 10;
+        }
+        #game-over-screen button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            background-color: #00ff08;
+            color: white;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        #instructions {
+            margin-top: 20px;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <h1>dont die</h1>
+    <p id="instructions">Use the arrow keys to move. Avoid the red squares.</p>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <div id="game-over-screen">
+        <h2>Game Over</h2>
+        <p id="final-score"></p>
+        <button onclick="window.location.reload();">Play Again</button>
+    </div>
+    <div id="score-container">
+        <p>Score: <span id="score">0</span></p>
+    </div>
+
+    <script>
+        // Game constants and variables
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+        const gameOverScreen = document.getElementById('game-over-screen');
+        const finalScoreElement = document.getElementById('final-score');
+        
+        let score = 0;
+        let gameOver = false;
+
+        
+
+
+        // Player properties
+        const player = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            size: 20,
+            speed: 3,
+            color: 'neon orange'
+        };
+
+        
+
+        // Collectable properties
+        const collectable = {
+            x: 0,
+            y: 0,
+            size: 15,
+            color: 'green'
+        };
+        
+        const collectables = [];
+        const maxCollectables = 1;
+
+        // Enemy properties
+        const enemies = [];
+        const enemySpeed = 6;
+
+        // Key press tracking
+        const keys = {
+            ArrowUp: false,
+            ArrowDown: false,
+            ArrowLeft: false,
+            ArrowRight: false
+        };
+
+        // Event listeners for key presses
+        window.addEventListener('keydown', (e) => {
+            if (e.key in keys) {
+                keys[e.key] = true;
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (e.key in keys) {
+                keys[e.key] = false;
+            }
+        });
+
+        function spawnCollectable() {
+            if (collectables.length < maxCollectables) {
+                const newCollectable = {
+                    x: Math.random() * (canvas.width - collectable.size),
+                    y: Math.random() * (canvas.height - collectable.size),
+                    size: 15,
+                    color: 'green'
+                };
+                collectables.push(newCollectable);
+            }
+        }
+        
+        function spawnEnemy() {
+            const enemy = {
+                x: Math.random() * (canvas.width - 20),
+                y: Math.random() * (canvas.height - 20),
+                size: 20,
+                color: 'red',
+                dx: (Math.random() - 2.0) * 4, // Random direction and speed
+                dy: (Math.random() - 2.0) * 4
+            };
+            enemies.push(enemy);
+        }
+
+        function updatePlayer() {
+            if (keys.ArrowUp) player.y -= player.speed;
+            if (keys.ArrowDown) player.y += player.speed;
+            if (keys.ArrowLeft) player.x -= player.speed;
+            if (keys.ArrowRight) player.x += player.speed;
+
+            // Prevent player from going out of bounds
+            if (player.x < 0) player.x = 0;
+            if (player.x + player.size > canvas.width) player.x = canvas.width - player.size;
+            if (player.y < 0) player.y = 0;
+            if (player.y + player.size > canvas.height) player.y = canvas.height - player.size;
+        }
+
+        function updateEnemies() {
+            enemies.forEach(enemy => {
+                enemy.x += enemy.dx;
+                enemy.y += enemy.dy;
+
+                // Bounce off canvas walls
+                if (enemy.x <= 0 || enemy.x + enemy.size >= canvas.width) {
+                    enemy.dx *= -1;
+                }
+                if (enemy.y <= 0 || enemy.y + enemy.size >= canvas.height) {
+                    enemy.dy *= -1;
+                }
+            });
+        }
+
+        function checkCollisions() {
+            // Player vs Collectable
+            for (let i = collectables.length - 1; i >= 0; i--) {
+                const c = collectables[i];
+                if (
+                    player.x < c.x + c.size &&
+                    player.x + player.size > c.x &&
+                    player.y < c.y + c.size &&
+                    player.y + player.size > c.y
+                ) {
+                    // Collision detected
+                    score++;
+                    scoreElement.textContent = score;
+                    collectables.splice(i, 1); // Remove collected item
+                    spawnCollectable(); // Spawn a new one
+                    spawnEnemy(); // Spawn a new enemy
+                }
+            }
+
+            // Player vs Enemy
+            enemies.forEach(enemy => {
+                if (
+                    player.x < enemy.x + enemy.size &&
+                    player.x + player.size > enemy.x &&
+                    player.y < enemy.y + enemy.size &&
+                    player.y + player.size > enemy.y
+                ) {
+                    // Game Over
+                    gameOver = true;
+                }
+            });
+        }
+
+        function draw() {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw player
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x, player.y, player.size, player.size);
+
+            // Draw collectables
+            collectables.forEach(c => {
+                ctx.fillStyle = c.color;
+                ctx.fillRect(c.x, c.y, c.size, c.size);
+            });
+
+            // Draw enemies
+            enemies.forEach(enemy => {
+                ctx.fillStyle = enemy.color;
+                ctx.fillRect(enemy.x, enemy.y, enemy.size, enemy.size);
+            });
+        }
+
+        function gameLoop() {
+            if (gameOver) {
+                finalScoreElement.textContent = `You collected ${score} green squares!`;
+                gameOverScreen.style.display = 'block';
+                return;
+            }
+
+            updatePlayer();
+            updateEnemies();
+            checkCollisions();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // Initial setup
+        spawnCollectable();
+        gameLoop();
+    </script>
+</body>
+</html>
