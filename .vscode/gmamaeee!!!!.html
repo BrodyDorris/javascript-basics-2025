@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2D Truck Simulator with Exploding Enemies</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #333;
+            overflow: hidden;
+            font-family: sans-serif;
+            color: white;
+            text-align: center;
+        }
+        canvas {
+            background-color: #555;
+            border: 2px solid #000;
+        }
+        #gameOverScreen {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <div id="gameOverScreen">
+        <h2>Game Over</h2>
+        <p>You crashed into a blue car!</p>
+        <button onclick="resetGame()">Restart</button>
+    </div>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const gameOverScreen = document.getElementById('gameOverScreen');
+        let gameOver = false;
+
+        // Game objects
+        let truck = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            width: 30,
+            height: 60,
+            speed: 0,
+            maxSpeed: 8,
+            rotation: 0,
+            color: 'darkred',
+            // Physics properties
+            forwardVelocity: 0,
+            sideVelocity: 0,
+            acceleration: 0.15,
+            friction: 0.05,
+            turnSpeed: 0.05
+        };
+
+        const keys = {};
+
+        // Tire track data
+        const tracks = [];
+        let lastTrackTime = 0;
+        const trackInterval = 0.5; // Milliseconds between track points
+        const trackWidth = 8;
+        const tireTrackColor = 'rgba(0, 0, 0, 0.2)'; // Faint black for tracks
+
+        // Enemy data
+        const enemies = [];
+        const enemySize = 25;
+        const enemyColor = 'blue';
+        let lastEnemySpawnTime = 0;
+        const enemySpawnInterval = 1500; // Time in ms to spawn a new enemy
+
+        // Explosion data
+        const explosions = [];
+
+        // Event listeners for keyboard input
+        document.addEventListener('keydown', (event) => {
+            keys[event.key] = true;
+        });
+
+        document.addEventListener('keyup', (event) => {
+            keys[event.key] = false;
+        });
+
+        function spawnEnemy() {
+            const side = Math.floor(Math.random() * 4); // 0: top, 1: right, 2: bottom, 3: left
+            let x, y;
+            switch (side) {
+                case 0: // Top
+                    x = Math.random() * canvas.width;
+                    y = -enemySize;
+                    break;
+                case 1: // Right
+                    x = canvas.width + enemySize;
+                    y = Math.random() * canvas.height;
+                    break;
+                case 2: // Bottom
+                    x = Math.random() * canvas.width;
+                    y = canvas.height + enemySize;
+                    break;
+                case 3: // Left
+                    x = -enemySize;
+                    y = Math.random() * canvas.height;
+                    break;
+            }
+
+            enemies.push({
+                x: x,
+                y: y,
+                width: enemySize,
+                height: enemySize,
+                color: enemyColor
+            });
+        }
+
+        function checkCollision(rect1, rect2) {
+            // Simple axis-aligned bounding box (AABB) collision detection
+            return rect1.x < rect2.x + rect2.width &&
+                   rect1.x + rect1.width > rect2.x &&
+                   rect1.y < rect2.y + rect2.height &&
+                   rect1.y + rect1.height > rect2.y;
+        }
+
+        function createExplosion(x, y) {
+            const duration = 500; // Explosion duration in ms
+            const startTime = Date.now();
+            explosions.push({ x: x, y: y, startTime: startTime, duration: duration });
+        }
+
+        function resetGame() {
+            gameOver = false;
+            gameOverScreen.style.display = 'none';
+            // Reset player position and state
+            truck.x = canvas.width / 2;
+            truck.y = canvas.height / 2;
+            truck.rotation = 0;
+            truck.forwardVelocity = 0;
+            truck.sideVelocity = 0;
+            // Clear enemies and tracks
+            enemies.length = 0;
+            tracks.length = 0;
+            explosions.length = 0;
+            // Restart game loop
+            gameLoop();
+        }
+
+        function update() {
+            if (gameOver) return;
+
+            // Player movement physics
+            const forwardVectorX = Math.sin(truck.rotation);
+            const forwardVectorY = -Math.cos(truck.rotation);
+            const rightVectorX = Math.cos(truck.rotation);
+            const rightVectorY = Math.sin(truck.rotation);
+
+            if (keys['ArrowUp']) {
+                truck.forwardVelocity += truck.acceleration;
+            } else if (keys['ArrowDown']) {
+                truck.forwardVelocity -= truck.acceleration * 0.5;
+            } else {
+                truck.forwardVelocity -= Math.sign(truck.forwardVelocity) * truck.friction;
+            }
+
+            truck.sideVelocity -= truck.sideVelocity * 0.1;
+
+            if (keys['ArrowLeft']) {
+                truck.rotation -= truck.turnSpeed;
+            }
+            if (keys['ArrowRight']) {
+                truck.rotation += truck.turnSpeed;
+            }
+
+            const turnFactor = truck.forwardVelocity * 0.01;
+            if (keys['ArrowLeft']) {
+                truck.sideVelocity -= turnFactor;
+            }
+            if (keys['ArrowRight']) {
+                truck.sideVelocity += turnFactor;
+            }
+
+            if (Math.abs(truck.forwardVelocity) > truck.maxSpeed) {
+                truck.forwardVelocity = Math.sign(truck.forwardVelocity) * truck.maxSpeed;
+            }
+            if (Math.abs(truck.forwardVelocity) < 0.1) {
+                truck.forwardVelocity = 0;
+            }
+
+            truck.x += forwardVectorX * truck.forwardVelocity;
+            truck.y += forwardVectorY * truck.forwardVelocity;
+            truck.x += rightVectorX * truck.sideVelocity;
+            truck.y += rightVectorY * truck.sideVelocity;
+
+            // Keep the truck within canvas bounds
+            if (truck.x < 0) truck.x = 0;
+            if (truck.x > canvas.width) truck.x = canvas.width;
+            if (truck.y < 0) truck.y = 0;
+            if (truck.y > canvas.height) truck.y = canvas.height;
+            
+            // Add tire tracks
+            const currentTime = Date.now();
+            if (Math.abs(truck.forwardVelocity) > 0.5 && currentTime - lastTrackTime > trackInterval) {
+                const tireOffsetX = -Math.sin(truck.rotation+50) * (truck.height / 2);
+                const tireOffsetY = Math.cos(truck.rotation+50) * (truck.height / 2);
+
+                tracks.push({ x: truck.x - tireOffsetX, y: truck.y - tireOffsetY, rotation: truck.rotation + 180});
+                tracks.push({ x: truck.x + tireOffsetX, y: truck.y + tireOffsetY, rotation: truck.rotation + 180 });
+                lastTrackTime = currentTime;
+            }
+
+            // Spawn enemies
+            if (currentTime - lastEnemySpawnTime > enemySpawnInterval) {
+                spawnEnemy();
+                lastEnemySpawnTime = currentTime;
+            }
+
+            // Move enemies towards the player
+            for (const enemy of enemies) {
+                const angleToPlayer = Math.atan2(truck.y - enemy.y, truck.x - enemy.x);
+                enemy.x += Math.cos(angleToPlayer) * 1.5; // Enemy speed
+                enemy.y += Math.sin(angleToPlayer) * 1.5;
+            }
+
+            // Collision detection
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                const enemy = enemies[i];
+                // Check collision between truck and enemy
+                const truckCollisionRect = {
+                    x: truck.x - truck.width / 2,
+                    y: truck.y - truck.height / 2,
+                    width: truck.width,
+                    height: truck.height
+                };
+                if (checkCollision(truckCollisionRect, enemy)) {
+                    createExplosion(truck.x, truck.y);
+                    gameOver = true; // Set game over on player collision
+                    gameOverScreen.style.display = 'flex';
+                }
+            }
+        }
+
+        function draw() {
+            // Semi-transparent overlay for track fade effect
+            ctx.fillStyle = 'rgba(85, 85, 85, 0.2)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw tire tracks
+            for (const track of tracks) {
+                ctx.save();
+                ctx.translate(track.x, track.y);
+                ctx.rotate(track.rotation);
+                ctx.fillStyle = tireTrackColor;
+                ctx.fillRect(-trackWidth / 2, 0, trackWidth, 1);
+                ctx.restore();
+            }
+
+            // Draw enemies
+            for (const enemy of enemies) {
+                ctx.fillStyle = enemy.color;
+                ctx.fillRect(enemy.x - enemy.width / 2, enemy.y - enemy.height / 2, enemy.width, enemy.height);
+            }
+
+            // Draw explosions
+            const currentTime = Date.now();
+            for (let i = explosions.length - 1; i >= 0; i--) {
+                const exp = explosions[i];
+                const age = currentTime - exp.startTime;
+                if (age < exp.duration) {
+                    const progress = age / exp.duration;
+                    const radius = progress * 40;
+                    const alpha = 1 - progress;
+
+                    ctx.beginPath();
+                    ctx.arc(exp.x, exp.y, radius, 0, Math.PI * 2, false);
+                    ctx.fillStyle = `rgba(255, 100, 0, ${alpha})`;
+                    ctx.fill();
+                } else {
+                    explosions.splice(i, 1);
+                }
+            }
+
+            // Draw the truck (only if not game over)
+            if (!gameOver) {
+                ctx.save();
+                ctx.translate(truck.x, truck.y);
+                ctx.rotate(truck.rotation);
+                ctx.fillStyle = truck.color;
+                ctx.fillRect(-truck.width / 2, -truck.height / 2, truck.width, truck.height);
+                ctx.restore();
+            }
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            if (!gameOver) {
+                requestAnimationFrame(gameLoop);
+            }
+        }
+
+        // Start the game loop
+        gameLoop();
+    </script>
+</body>
+</html>
