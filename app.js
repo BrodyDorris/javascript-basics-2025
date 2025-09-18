@@ -4,15 +4,9 @@ const STONE = "stone";
 const PARCHMENT = "parchment";
 const SHEARS = "shears";
 
-
 let tieCount = 0;
 let winCount = 0;
 let lossCount = 0;
-
-let hue = 0;
-/** @type { HTMLElement } */
-//@ts-ignore
-let myElement = document.getElementById("myParagraph");
 
 /** @type { HTMLElement } */
 //@ts-ignore checking for null below
@@ -20,69 +14,8 @@ let resultsElement = document.getElementById("game-results");
 if (resultsElement == null) {
 	throw "aftermath is not defined";
 }
-/**@type {HTMLElement } */
-//@ts-ignore
-const bouncingSquare = document.getElementById('bouncing-square');
-
-// Variable to control the animation state
-let animationId = null; 
-
-// Bouncing square animation
-window.onload = function () {
-	/**@type {HTMLElement } */
-	//@ts-ignore
-	const bouncingSquare = document.getElementById('bouncing-square');
-
-	// Get viewport dimensions
-	let viewportWidth = window.innerWidth;
-	let viewportHeight = window.innerHeight;
-
-	// Get square dimensions
-	const squareWidth = bouncingSquare.offsetWidth;
-	const squareHeight = bouncingSquare.offsetHeight;
-
-	// Set initial position and velocity
-	let x = 500;
-	let y = 500;
-	let dx = Math.floor(Math.random() * 20 + 2); // Velocity in the x-direction
-	let dy = dx; // Velocity in the y-direction
-
-	function animateSquare() {
-		// Update position
-		x += dx;
-		y += dy;
-
-		// Collision detection for x-axis
-		if (x + squareWidth >= viewportWidth || x <= 0) {
-			dx = -dx; // Reverse x-direction
-		}
-
-		// Collision detection for y-axis
-		if (y + squareHeight >= viewportHeight || y <= 0) {
-			dy = -dy; // Reverse y-direction
-		}
-
-		// Apply new position
-		bouncingSquare.style.left = x + 'px';
-		bouncingSquare.style.top = y + 'px';
-
-		// Recalculate viewport dimensions in case of window resize
-		viewportWidth = window.innerWidth;
-		viewportHeight = window.innerHeight;
-
-		// Request the next frame
-		requestAnimationFrame(animateSquare);
-	}
-
-	// Start the animation loop
-	animateSquare();
-};
-
 
 const pickWeapon = function (weapon) {
-	// Stop any existing animation at the start of a new game round
-	stopFlashing();
-    
 	let aftermathText = `The player elected to choose ${weapon}. `;
 	console.log("The contender elected to choose", weapon);
 
@@ -101,14 +34,10 @@ const pickWeapon = function (weapon) {
 		winner = "The player prevails";
 		winCount += 1;
 		console.log(winCount);
-	} else if (results?.computerVictorious){
+	} else {
 		winner = "The computer prevails";
 		lossCount += 1;
 		console.log(lossCount);
-		// START THE FLASHING ANIMATION HERE
-		startFlashing();
-	}else{
-		winner = "";
 	}
 	aftermathText += `${winner} as ${results?.description}.`;
 
@@ -133,7 +62,6 @@ function determineOutcome(playerWeapon, computerWeapon) {
 	let outcome = {
 		isDraw: false,
 		playerVictorious: false,
-		computerVictorious: false,
 		description: "",
 	};
 
@@ -152,7 +80,6 @@ function determineOutcome(playerWeapon, computerWeapon) {
 
 	if (playerWeapon == STONE && computerWeapon == PARCHMENT) {
 		outcome.playerVictorious = false;
-		outcome.computerVictorious = true;
 		outcome.description =
 			"Stone does not triumph; Parchment eradicated Stone in this contest.";
 		return outcome;
@@ -160,7 +87,6 @@ function determineOutcome(playerWeapon, computerWeapon) {
 
 	if (playerWeapon == PARCHMENT && computerWeapon == SHEARS) {
 		outcome.playerVictorious = false;
-		outcome.computerVictorious = true;
 		outcome.description =
 			"Parchment does not triumph; Shears eradicated Parchment in this contest.";
 		return outcome;
@@ -182,46 +108,10 @@ function determineOutcome(playerWeapon, computerWeapon) {
 
 	if (playerWeapon == SHEARS && computerWeapon == STONE) {
 		outcome.playerVictorious = false;
-		outcome.computerVictorious = true;
 		outcome.description =
 			"Shears do not triumph; Stone eradicated Shears in this contest.";
 		return outcome;
 	}
 
 	console.log(outcome);
-}
-
-// Controls the color flashing animation
-function updateFrame() {
-	// Increment the hue value.
-	hue = (hue + 20) % 360; 
-
-	// Create the HSL color string.
-	const color = `hsl(${hue}, 100%, 50%)`;
-
-	// Apply the new color to both the square and the page background.
-	bouncingSquare.style.backgroundColor = color;
-	document.body.style.backgroundColor = color; 
-
-	// Loop the animation
-	animationId = requestAnimationFrame(updateFrame);
-}
-
-// Starts the animation
-function startFlashing() {
-	// Only start if it's not already running
-	if (!animationId) {
-		updateFrame();
-	}
-}
-
-// Stops the animation and resets colors
-function stopFlashing() {
-	if (animationId) {
-		cancelAnimationFrame(animationId);
-		animationId = null;
-		// Reset background and square color to a default state
-		bouncingSquare.style.backgroundColor = '';
-		document.body.style.backgroundColor = ''; 
-	}
 }

@@ -1,0 +1,109 @@
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    margin: 0;
+    background-color: #f0f0f0;
+}
+
+h1 {
+    color: #333;
+}
+
+.simulator-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.input-section {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.input-switch-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.input-switch {
+    width: 50px;
+    height: 50px;
+    font-size: 20px;
+    font-weight: bold;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.input-switch[data-value="0"] {
+    background-color: #e74c3c; /* Red for 0 */
+}
+
+.input-switch[data-value="1"] {
+    background-color: #2ecc71; /* Green for 1 */
+}
+
+.gates-section {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.gate-container {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    width: 200px;
+    text-align: center;
+}
+
+.gate-box {
+    border: 2px solid #3498db;
+    border-radius: 8px;
+    padding: 10px;
+}
+
+.gate-name {
+    font-weight: bold;
+    font-size: 1.2em;
+    margin-bottom: 10px;
+}
+
+.gate-output {
+    margin-top: 10px;
+    font-size: 1.1em;
+}
+
+.gate-output span {
+    font-weight: bold;
+    padding: 5px 10px;
+    border-radius: 4px;
+}
+
+.gate-output span.output-0 {
+    background-color: #e74c3c;
+    color: white;
+}
+
+.gate-output span.output-1 {
+    background-color: #2ecc71;
+    color: white;
+}

@@ -3,21 +3,146 @@
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>
-			The strategically sophisticated game of Stone, Parchment, and Shears
-		</title>
-		<link rel="stylesheet" href="css/style.css" />
+		<title>The strategically sophisticated game of Stone, Parchment, and Shears</title>
+		<style>
+			
+			body {
+				font-family: 'Times New Roman', Times, serif;
+				margin: 0;
+				overflow: hidden; /* Prevent scrollbars from the square */
+				background-color:rgb(23, 18, 39);
+
+				/* Flexbox properties to center content */
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
+				align-items: center;
+				height: 100vh; /* Make the body take up the full height of the viewport */
+				color: rgb(231, 232, 255);
+				box-shadow: 0px 6px 0px rgb(145, 137, 185);
+				text-shadow: 0px 1px 10px rgb(145, 137, 185);
+			}
+
+			button {
+				padding: 20px;
+				border-radius: 20px;
+				font-size: 30px;
+				font-family: 'Times New Roman', Times, serif;
+				text-shadow: 0px 1px 10px rgb(129, 126, 160);
+				border: 1px solid rgb(199, 178, 253);
+				box-shadow: 0px 6px 0px rgb(155, 150, 180);
+				transition: background-color 0.1s ease, border-color 0.1s ease;
+			}
+			button:active {
+				background-color: rgb(180, 181, 190);
+				box-shadow: 0px 0px 0px blue;
+				transform: translateY(7px);
+			}
+			
+
+			/* CSS for the bouncing square */
+			#bouncing-square {
+				position: fixed;
+				z-index: -1; /* Puts the square behind all other content */
+				top: 500;
+				left: 500;
+				width: 200px; /* Adjust size as needed */
+				height: 200px;
+				background-color: rgb(45, 41, 66); /* Dark grey to complement the background */
+				box-shadow: 0px 8px 5px rgb(11, 12, 20);
+			}
+
+			
+		</style>
 	</head>
-	<body style="background-color: rgb(0, 0, 0)">
-		<h1 style="color: rgb(255, 255, 255)">Stone, Parchment, Shears</h1>
-		<h2 style="color: rgb(255, 255, 255)">How exiting!</h2>
+	<body>
+		<!-- The bouncing square element -->
+		<div id="bouncing-square"></div>
 
-		<button onclick="pickWeapon(STONE)">Stone</button>
-		<button onclick="pickWeapon(PARCHMENT)">Parchment</button>
-		<button onclick="pickWeapon(SHEARS)">Shears</button>
+		<!-- Game content -->
+		<h1>Stone, Parchment, Shears</h1>
+		<h2>How exiting!</h2>
 
-		<div  style="color: rgb(255, 255, 255)" id="game-results">Summary of Competitive Outcomes</div>
+		<h7 style="color: rgb(22, 22, 22);">.</h7>
 
-		<script src="rps/app.js"></script>
+		<div class="button-container">
+			<button onclick="pickWeapon(STONE)">Stone</button>
+			<button onclick="pickWeapon(PARCHMENT)">Parchment</button>
+			<button onclick="pickWeapon(SHEARS)">Shears</button>
+		</div>
+		
+		<div>
+			<div style="color: rgb(22, 22, 22)">
+				.
+			</div>
+		</div>
+		<div id="game-results"  text-shadow: 0px 1px 10px rgb(145, 137, 185);>Summary of Competitive Outcomes</div>
+
+		<script></script>
+
+		<!-- Combined JavaScript -->
+		<script src="rps/app.js">
+			
+			// Game-related constants (if they exist in your original app.js)
+			const STONE = 'stone';
+			const PARCHMENT = 'parchment';
+			const SHEARS = 'shears';
+
+			// Game-related functions (if they exist in your original app.js)
+			function pickWeapon(weapon) {
+				// Your game logic would go here
+				console.log(`Player picked: ${weapon}`);
+			}
+
+			// Bouncing square animation
+			window.onload = function () {
+				const bouncingSquare = document.getElementById('bouncing-square');
+
+				// Get viewport dimensions
+				let viewportWidth = window.innerWidth;
+				let viewportHeight = window.innerHeight;
+
+				// Get square dimensions
+				const squareWidth = bouncingSquare.offsetWidth;
+				const squareHeight = bouncingSquare.offsetHeight;
+
+				// Set initial position and velocity
+				let x = 500;
+				let y = 500;
+				let dx = Math.floor(Math.random() * 20 + 2); // Velocity in the x-direction
+				let dy = Math.floor(Math.random() * 20 + 2); // Velocity in the y-direction
+
+				function animateSquare() {
+					// Update position
+					x += dx;
+					y += dy;
+
+					// Collision detection for x-axis
+					if (x + squareWidth >= viewportWidth || x <= 0) {
+						dx = -dx; // Reverse x-direction
+					}
+
+					// Collision detection for y-axis
+					if (y + squareHeight >= viewportHeight || y <= 0) {
+						dy = -dy; // Reverse y-direction
+					}
+
+					// Apply new position
+					bouncingSquare.style.left = x + 'px';
+					bouncingSquare.style.top = y + 'px';
+
+					// Recalculate viewport dimensions in case of window resize
+					viewportWidth = window.innerWidth;
+					viewportHeight = window.innerHeight;
+
+					// Request the next frame
+					requestAnimationFrame(animateSquare);
+				}
+
+				// Start the animation loop
+				animateSquare();
+			};
+		</script>
 	</body>
 </html>
+

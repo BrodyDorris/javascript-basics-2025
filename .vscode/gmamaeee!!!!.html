@@ -11,14 +11,14 @@
             align-items: center;
             height: 100vh;
             margin: 0;
-            background-color: #333;
+            background-color: #000000;
             overflow: hidden;
             font-family: sans-serif;
             color: white;
             text-align: center;
         }
         canvas {
-            background-color: #555;
+            background-color: #000000;
             border: 2px solid #000;
         }
         #gameOverScreen {
@@ -55,7 +55,7 @@
             speed: 0,
             maxSpeed: 8,
             rotation: 0,
-            color: 'darkred',
+            color: 'red',
             // Physics properties
             forwardVelocity: 0,
             sideVelocity: 0,
@@ -69,9 +69,9 @@
         // Tire track data
         const tracks = [];
         let lastTrackTime = 0;
-        const trackInterval = 0.5; // Milliseconds between track points
+        const trackInterval = 0.1; // Milliseconds between track points
         const trackWidth = 8;
-        const tireTrackColor = 'rgba(0, 0, 0, 0.2)'; // Faint black for tracks
+        const tireTrackColor = 'rgba(20, 20, 20, 0.2)'; // Faint black for tracks
 
         // Enemy data
         const enemies = [];
