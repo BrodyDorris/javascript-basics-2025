@@ -3,14 +3,15 @@
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>The strategically sophisticated game of Stone, Parchment, and Shears</title>
+		<title>
+			The strategically sophisticated game of Stone, Parchment, and Shears
+		</title>
 		<style>
-			
 			body {
-				font-family: 'Times New Roman', Times, serif;
+				font-family: "Times New Roman", Times, serif;
 				margin: 0;
 				overflow: hidden; /* Prevent scrollbars from the square */
-				background-color:rgb(23, 18, 39);
+				background-color: rgb(23, 18, 39);
 
 				/* Flexbox properties to center content */
 				display: flex;
@@ -27,7 +28,7 @@
 				padding: 20px;
 				border-radius: 20px;
 				font-size: 30px;
-				font-family: 'Times New Roman', Times, serif;
+				font-family: "Times New Roman", Times, serif;
 				text-shadow: 0px 1px 10px rgb(129, 126, 160);
 				border: 1px solid rgb(199, 178, 253);
 				box-shadow: 0px 6px 0px rgb(155, 150, 180);
@@ -38,7 +39,6 @@
 				box-shadow: 0px 0px 0px blue;
 				transform: translateY(7px);
 			}
-			
 
 			/* CSS for the bouncing square */
 			#bouncing-square {
@@ -48,55 +48,304 @@
 				left: 500;
 				width: 200px; /* Adjust size as needed */
 				height: 200px;
-				background-color: rgb(45, 41, 66); /* Dark grey to complement the background */
+				background-color: rgb(
+					45,
+					41,
+					66
+				); /* Dark grey to complement the background */
 				box-shadow: 0px 8px 5px rgb(11, 12, 20);
 			}
 
-			
+			.winner {
+				box-shadow: 0 6px 10px 5px green;
+				border: 2px solid green;
+			}
+
+			.loser {
+				box-shadow: 0 6px 10px 5px red;
+				border: 2px solid red;
+			}
+
+			/* Scoreboard container styling */
+			.scoreboard-container {
+				padding: 20px;
+				border-radius: 20px;
+				border: 1px solid rgb(199, 178, 253);
+				box-shadow: 0px 6px 0px rgb(155, 150, 180);
+				background-color: rgb(45, 41, 66);
+				margin-top: 20px;
+				text-align: center;
+			}
+
+			.scoreboard p {
+				margin: 0;
+				font-size: 20px;
+			}
+
+			/* Fixes the scoreboard size shifting */
+			#game-summary-container {
+				min-height: 100px;
+			}
+			.store-container {
+				margin-top: 20px;
+			}
+
+			#upgrade-store {
+				display: flex;
+				justify-content: space-around;
+				gap: 15px;
+				flex-wrap: wrap;
+				margin-top: 10px;
+			}
+
+			.upgrade-button {
+				padding: 10px 20px;
+				border-radius: 10px;
+				font-size: 16px;
+				font-family: "Times New Roman", Times, serif;
+				background-color: rgb(75, 71, 96);
+				color: rgb(231, 232, 255);
+				border: 1px solid rgb(199, 178, 253);
+				cursor: pointer;
+				box-shadow: 0px 4px 0px rgb(155, 150, 180);
+				transition: all 0.1s ease;
+			}
+
+			.upgrade-button:hover:not(:disabled) {
+				background-color: rgb(95, 91, 116);
+			}
+
+			.upgrade-button:active:not(:disabled) {
+				box-shadow: none;
+				transform: translateY(4px);
+			}
+
+			.upgrade-button:disabled {
+				cursor: not-allowed;
+				opacity: 0.5;
+				box-shadow: none;
+			}
 		</style>
 	</head>
 	<body>
 		<!-- The bouncing square element -->
 		<div id="bouncing-square"></div>
 
+		<div id="game-timer">Time: 0:00</div>
+
 		<!-- Game content -->
 		<h1>Stone, Parchment, Shears</h1>
 		<h2>How exiting!</h2>
+		<h2>
+			Failure to prevail against the computer poses a photosensitive
+			epilepsy risk.
+		</h2>
 
-		<h7 style="color: rgb(22, 22, 22);">.</h7>
+		<h7 style="color: rgb(22, 22, 22)">.</h7>
 
 		<div class="button-container">
-			<button onclick="pickWeapon(STONE)">Stone</button>
-			<button onclick="pickWeapon(PARCHMENT)">Parchment</button>
-			<button onclick="pickWeapon(SHEARS)">Shears</button>
+			<button
+				class="game-button"
+				onclick="pickWeapon(STONE);"
+				id="stone-btn"
+			>
+				Stone
+			</button>
+			<button
+				class="game-button"
+				onclick="pickWeapon(PARCHMENT);"
+				id="parchment-btn"
+			>
+				Parchment
+			</button>
+			<button
+				class="game-button"
+				onclick="pickWeapon(SHEARS);"
+				id="shears-btn"
+			>
+				Shears
+			</button>
+			<button
+				class="game-button"
+				onclick="pickWeapon(STAPLER);"
+				id="stapler-btn"
+				style="display: none"
+			>
+				Stapler
+			</button>
+			<button
+				class="game-button"
+				onclick="pickWeapon();"
+				id="pen-btn"
+				style="display: none"
+			>
+				Pen
+			</button>
+			<button
+				class="game-button"
+				onclick="pickWeapon(GUN);"
+				id="gun-btn"
+				style="display: none"
+			>
+				Gun
+			</button>
 		</div>
-		
+
 		<div>
-			<div style="color: rgb(22, 22, 22)">
-				.
+			<div style="color: rgb(22, 22, 22)">.</div>
+			<div id="game-summary-container">
+				<div id="game-results">Summary of Competitive Outcomes</div>
+			</div>
+			<!-- Scoreboard is now after the battle results -->
+			<div class="scoreboard-container">
+				<div class="scoreboard">
+					<p>Wins: <span id="win-count">0</span></p>
+					<p>Losses: <span id="loss-count">0</span></p>
+					<p>Ties: <span id="tie-count">0</span></p>
+				</div>
 			</div>
 		</div>
-		<div id="game-results"  text-shadow: 0px 1px 10px rgb(145, 137, 185);>Summary of Competitive Outcomes</div>
 
-		<script></script>
+		<div class="store-container scoreboard-container">
+			<h2>Upgrades</h2>
+			<div id="upgrade-store">
+				<!-- Upgrade buttons will be generated here by JavaScript -->
+			</div>
+		</div>
 
 		<!-- Combined JavaScript -->
-		<script src="rps/app.js">
-			
-			// Game-related constants (if they exist in your original app.js)
-			const STONE = 'stone';
-			const PARCHMENT = 'parchment';
-			const SHEARS = 'shears';
+		<script>
+			//@ts-check
 
-			// Game-related functions (if they exist in your original app.js)
-			function pickWeapon(weapon) {
-				// Your game logic would go here
-				console.log(`Player picked: ${weapon}`);
+			const STONE = "stone";
+			const PARCHMENT = "parchment";
+			const SHEARS = "shears";
+			const STAPLER = "stapler";
+			const PEN = "pen";
+			const GUN = "gun";
+			const WEAPONS = [STONE, PARCHMENT, SHEARS, STAPLER, PEN];
+
+			let tieCount = 0;
+			let winCount = 0;
+			let lossCount = 0;
+
+			let hue = 0;
+			let playerStats = {
+				winMultiplier: 1,
+				upgradeCost: 5,
+				unlockedOmniStone: false,
+				unlockedStapler: false,
+				unlockedPEN: false,
+				permanentAutoClicker: false,
+			};
+
+			/** @type { HTMLElement | null } */
+			let myElement = document.getElementById("myParagraph");
+
+			/** @type { HTMLElement | null } */
+			let resultsElement = document.getElementById("game-results");
+			if (resultsElement == null) {
+				throw "aftermath is not defined";
 			}
+			/**@type {HTMLElement | null } */
+			const bouncingSquare = document.getElementById("bouncing-square");
+			if (bouncingSquare == null) {
+				throw "bouncing-square is not defined";
+			}
+
+			// Variable to control the animation state
+			let animationId = null;
+
+			// Win conditions object
+			const winConditions = {
+				[STONE]: [SHEARS, STAPLER],
+				[PARCHMENT]: [STONE, PEN],
+				[SHEARS]: [PARCHMENT, STAPLER],
+				[STAPLER]: [PARCHMENT, PEN],
+				[PEN]: [STONE, SHEARS],
+			};
+
+			// Upgrade definitions
+			const upgrades = [
+				{
+					id: "flash-reduce-1",
+					name: "Reduce Flash Risk",
+					cost: 5,
+					effect: () =>
+						(playerStats.upgradeCost = Math.floor(
+							playerStats.upgradeCost * 0.8
+						)),
+				},
+				{
+					id: "flash-reduce-2",
+					name: "Super Reduce",
+					cost: 10,
+					effect: () =>
+						(playerStats.upgradeCost = Math.floor(
+							playerStats.upgradeCost * 0.7
+						)),
+				},
+				{
+					id: "flash-reduce-3",
+					name: "Hyper Reduce",
+					cost: 20,
+					effect: () =>
+						(playerStats.upgradeCost = Math.floor(
+							playerStats.upgradeCost * 0.5
+						)),
+				},
+				{
+					id: "unlock-stapler",
+					name: "Unlock Stapler",
+					cost: 35,
+					effect: () => {
+						playerStats.unlockedStapler = true;
+						const button = document.getElementById("stapler-btn");
+						if (button) button.style.display = "inline-block";
+					},
+				},
+				{
+					id: "unlock-pen",
+					name: "Unlock pen",
+					cost: 75,
+					effect: () => {
+						playerStats.unlockedPen = true;
+						const button = document.getElementById("pen-btn");
+						if (button) button.style.display = "inline-block";
+					},
+				},
+				{
+					id: "gun-unlock",
+					name: "Unlock Gun",
+					cost: 100,
+					effect: () => {
+						playerStats.unlockedOmniStone = true;
+						const omniStoneBtn = document.getElementById("gun-btn");
+						if (omniStoneBtn) {
+							omniStoneBtn.style.display = "inline-block";
+						}
+					},
+				},
+				{
+					id: "permanent-autoclicker",
+					name: "Permanent Autoclicker",
+					cost: 300,
+					effect: () => {
+						playerStats.permanentAutoClicker = true;
+						const button = document.getElementById(
+							"permanent-autoclicker-btn"
+						);
+						if (button) button.disabled = true;
+						startPermanentAutoClicker();
+					},
+				},
+			];
 
 			// Bouncing square animation
 			window.onload = function () {
-				const bouncingSquare = document.getElementById('bouncing-square');
+				const bouncingSquare =
+					document.getElementById("bouncing-square");
+				if (!bouncingSquare) return;
 
 				// Get viewport dimensions
 				let viewportWidth = window.innerWidth;
@@ -110,9 +359,11 @@
 				let x = 500;
 				let y = 500;
 				let dx = Math.floor(Math.random() * 20 + 2); // Velocity in the x-direction
-				let dy = Math.floor(Math.random() * 20 + 2); // Velocity in the y-direction
+				let dy = dx; // Velocity in the y-direction
 
 				function animateSquare() {
+					if (!bouncingSquare) return;
+
 					// Update position
 					x += dx;
 					y += dy;
@@ -128,8 +379,8 @@
 					}
 
 					// Apply new position
-					bouncingSquare.style.left = x + 'px';
-					bouncingSquare.style.top = y + 'px';
+					bouncingSquare.style.left = x + "px";
+					bouncingSquare.style.top = y + "px";
 
 					// Recalculate viewport dimensions in case of window resize
 					viewportWidth = window.innerWidth;
@@ -141,8 +392,270 @@
 
 				// Start the animation loop
 				animateSquare();
+
+				// Render the upgrade store on load
+				renderUpgradeStore();
+				if (playerStats.permanentAutoClicker) {
+					startPermanentAutoClicker();
+				}
 			};
+
+			const pickWeapon = function (playerWeapon) {
+				stopFlashing();
+
+				const allButtons = document.querySelectorAll(".game-button");
+				allButtons.forEach((btn) => {
+					btn.classList.remove("winner", "loser");
+				});
+
+				let aftermathText = `The player elected to choose ${playerWeapon}. `;
+				console.log("The contender elected to choose", playerWeapon);
+
+				let computerWeapon = selectComputerWeapon();
+				console.log("the computer elected to choose", computerWeapon);
+
+				let results = determineOutcome(playerWeapon, computerWeapon);
+				console.log("outcome: ", results);
+
+				let winner = "";
+				if (results?.isDraw) {
+					winner = results.description;
+					tieCount += 1;
+					console.log(tieCount);
+				} else if (results?.playerVictorious) {
+					winner = "The player prevails";
+					winCount += playerStats.winMultiplier;
+					console.log(winCount);
+				} else if (results?.computerVictorious) {
+					winner = "The computer prevails";
+					lossCount += 1;
+					console.log(lossCount);
+					startFlashing();
+				} else {
+					winner = "";
+				}
+				if (resultsElement) {
+					resultsElement.textContent =
+						aftermathText + `${winner} as ${results?.description}.`;
+				}
+
+				const playerButton = document.getElementById(
+					`${playerWeapon}-btn`
+				);
+				const computerButton = document.getElementById(
+					`${computerWeapon}-btn`
+				);
+
+				if (results?.playerVictorious) {
+					if (playerButton) playerButton.classList.add("winner");
+					if (computerButton) computerButton.classList.add("loser");
+				} else if (results?.computerVictorious) {
+					if (playerButton) playerButton.classList.add("loser");
+					if (computerButton) computerButton.classList.add("winner");
+				}
+
+				setTimeout(() => {
+					if (playerButton)
+						playerButton.classList.remove("winner", "loser");
+					if (computerButton)
+						computerButton.classList.remove("winner", "loser");
+				}, 1500);
+
+				updateScoreboard();
+				renderUpgradeStore();
+			};
+
+			const selectComputerWeapon = function () {
+				const availableWeapons = WEAPONS.slice(
+					0,
+					3 +
+						(playerStats.unlockedStapler ? 1 : 0) +
+						(playerStats.unlockedPen ? 1 : 0)
+				);
+				const rand = Math.floor(
+					Math.random() * availableWeapons.length
+				);
+				return availableWeapons[rand];
+			};
+
+			function determineOutcome(playerWeapon, computerWeapon) {
+				let outcome = {
+					isDraw: false,
+					playerVictorious: false,
+					computerVictorious: false,
+					description: "",
+				};
+
+				if (playerWeapon === GUN) {
+					outcome.playerVictorious = true;
+					outcome.description = "The Gun consumes all.";
+					return outcome;
+				}
+
+				if (playerWeapon === computerWeapon) {
+					outcome.isDraw = true;
+					outcome.description =
+						"The results of this battle is a draw.";
+					return outcome;
+				}
+
+				if (winConditions[playerWeapon]?.includes(computerWeapon)) {
+					outcome.playerVictorious = true;
+					outcome.description = `${playerWeapon} beats ${computerWeapon}.`;
+					return outcome;
+				} else {
+					outcome.computerVictorious = true;
+					outcome.description = `${computerWeapon} beats ${playerWeapon}.`;
+					return outcome;
+				}
+			}
+
+			// Function to update the scoreboard in the HTML
+			const updateScoreboard = function () {
+				/** @type { HTMLElement | null } */
+				const winCountElement = document.getElementById("win-count");
+				if (winCountElement) {
+					winCountElement.textContent = winCount.toString();
+				}
+
+				/** @type { HTMLElement | null } */
+				const lossCountElement = document.getElementById("loss-count");
+				if (lossCountElement) {
+					lossCountElement.textContent = lossCount.toString();
+				}
+
+				/** @type { HTMLElement | null } */
+				const tieCountElement = document.getElementById("tie-count");
+				if (tieCountElement) {
+					tieCountElement.textContent = tieCount.toString();
+				}
+			};
+
+			// Controls the color flashing animation
+			function updateFrame() {
+				if (!bouncingSquare) return;
+				// Increment the hue value.
+				hue = (hue + 500) % 360;
+
+				// Create the HSL color string.
+				const color = `hsl(${hue}, 100%, 50%)`;
+
+				// Apply the new color to both the square and the page background.
+				bouncingSquare.style.backgroundColor = color;
+				document.body.style.backgroundColor = color;
+
+				// Loop the animation
+				animationId = requestAnimationFrame(updateFrame);
+			}
+
+			// Starts the animation
+			function startFlashing() {
+				if (!animationId) {
+					updateFrame();
+				}
+			}
+
+			// Stops the animation and resets colors
+			function stopFlashing() {
+				if (animationId) {
+					cancelAnimationFrame(animationId);
+					animationId = null;
+					if (bouncingSquare)
+						bouncingSquare.style.backgroundColor = "";
+					document.body.style.backgroundColor = "";
+				}
+			}
+
+			let autoClickInterval = null;
+
+			document.addEventListener("keydown", (event) => {
+				if (event.code === "Space" && autoClickInterval === null) {
+					const button = document.getElementById("stone-btn");
+					if (button) {
+						autoClickInterval = setInterval(() => {
+							button.click();
+						}, 1);
+					}
+				}
+			});
+
+			document.addEventListener("keyup", (event) => {
+				if (event.code === "Space" && autoClickInterval !== null) {
+					clearInterval(autoClickInterval);
+					autoClickInterval = null;
+				}
+			});
+
+			function startPermanentAutoClicker() {
+				const button = document.getElementById("stone-btn");
+				if (button) {
+					setInterval(() => {
+						button.click();
+					}, 1);
+				}
+			}
+
+			/**
+			 * Creates and renders the upgrade buttons in the store.
+			 */
+			function renderUpgradeStore() {
+				const store = document.getElementById("upgrade-store");
+				if (!store) return;
+
+				store.innerHTML = "";
+
+				upgrades.forEach((upgrade) => {
+					// Check if item is already purchased
+					if (
+						playerStats.unlockedOmniStone &&
+						upgrade.id === "gun-unlock"
+					)
+						return;
+					if (
+						playerStats.unlockedStapler &&
+						upgrade.id === "unlock-stapler"
+					)
+						return;
+					if (playerStats.unlockedPen && upgrade.id === "unlock-pen")
+						return;
+					if (
+						playerStats.permanentAutoClicker &&
+						upgrade.id === "permanent-autoclicker"
+					)
+						return;
+
+					const button = document.createElement("button");
+					button.id = `upgrade-${upgrade.id}`;
+					button.className = "upgrade-button";
+					button.textContent = `${upgrade.name} (${upgrade.cost} Wins)`;
+					button.disabled = winCount < upgrade.cost;
+
+					button.onclick = () => buyUpgrade(upgrade);
+					store.appendChild(button);
+				});
+			}
+
+			/**
+			 * Handles the purchase logic for an upgrade.
+			 * @param {object} upgrade The upgrade object to purchase.
+			 */
+			function buyUpgrade(upgrade) {
+				if (winCount >= upgrade.cost) {
+					winCount -= upgrade.cost;
+					upgrade.effect();
+					updateScoreboard();
+
+					const button = document.getElementById(
+						`upgrade-${upgrade.id}`
+					);
+					if (button) {
+						button.disabled = true;
+						button.textContent = `${upgrade.name} (Purchased)`;
+					}
+				} else {
+					alert("Not enough wins to purchase this upgrade!");
+				}
+			}
 		</script>
 	</body>
 </html>
-

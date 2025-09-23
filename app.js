@@ -17,27 +17,21 @@ if (resultsElement == null) {
 
 const pickWeapon = function (weapon) {
 	let aftermathText = `The player elected to choose ${weapon}. `;
-	console.log("The contender elected to choose", weapon);
 
 	let computerWeapon = selectComputerWeapon();
-	console.log("the computer elected to choose", computerWeapon);
 
 	let results = determineOutcome(weapon, computerWeapon);
-	console.log("outcome: ", results);
 
 	let winner = "";
 	if (results?.isDraw) {
 		winner = results.description;
 		tieCount += 1;
-		console.log(tieCount);
 	} else if (results?.playerVictorious) {
 		winner = "The player prevails";
 		winCount += 1;
-		console.log(winCount);
 	} else {
 		winner = "The computer prevails";
 		lossCount += 1;
-		console.log(lossCount);
 	}
 	aftermathText += `${winner} as ${results?.description}.`;
 
@@ -112,6 +106,4 @@ function determineOutcome(playerWeapon, computerWeapon) {
 			"Shears do not triumph; Stone eradicated Shears in this contest.";
 		return outcome;
 	}
-
-	console.log(outcome);
 }
