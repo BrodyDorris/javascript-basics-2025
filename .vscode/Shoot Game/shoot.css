@@ -27,3 +27,41 @@ canvas {
     font-size: 1.2em;
     text-align: center;
 }
+/* Container that holds and hides the overflow of the scrolling text */
+.marquee-container {
+    width: 100%;
+    overflow: hidden;
+    white-space: nowrap; /* Prevents the text from wrapping to the next line */
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+/* The element containing the duplicated text */
+.marquee-text {
+    display: inline-block;
+    animation: scroll 60s linear infinite; /* Animation name, duration, speed, and loop */
+    padding-left: 100%; /* Pushes the initial text off the right side of the screen */
+}
+
+/* Keyframes define the animation behavior */
+@keyframes scroll {
+    0% {
+        transform: translate(0, 0); /* Start at original position */
+    }
+    100% {
+        transform: translate(-100%, 0); /* End by moving the text completely to the left */
+    }
+}
+
+#page-content.shake {
+  animation: shake 0.5s;
+  animation-iteration-count: 1; /* Prevent indefinite repetition */
+}
+
+@keyframes shake {
+  0% { transform: translate(1px, 1px); }
+  10% { transform: translate(-1px, -2px); }
+  /* Additional keyframes for the shake effect can be found in the referenced document */
+  100% { transform: translate(1px, -2px); }
+}
