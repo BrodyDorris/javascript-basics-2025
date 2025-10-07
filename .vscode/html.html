@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Area Code Platformer</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            display: block;
+            background-color: #87ceeb; /* Sky blue background */
+        }
+        #instructions {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.2em;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    <div id="instructions">
+        <h2>Area Code Platformer</h2>
+        <p>Jump on the platform with the correct area code to answer the question.</p>
+        <p>Use the **SPACEBAR** to jump.</p>
+        <p>Use **A/D** or **Left/Right Arrows** to move horizontally.</p>
+        <p>Press **SPACEBAR** to start.</p>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const instructionsDiv = document.getElementById('instructions');
+
+        // Set up the canvas to fill the window
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight; // FIX: Corrected window.height to window.innerHeight
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Game state
+        let gameActive = false;
+        let score = 0;
+        let areaCodeQuestion = { area: '', code: '' };
+
+        // Player properties
+        const player = {
+            x: 50,
+            y: 50,
+            width: 30,
+            height: 30,
+            color: '#ff69b4', // Hot pink
+            velY: 0,
+            isJumping: false,
+            velX: 0
+        };
+
+        const gravity = 0.5;
+        const jumpStrength = -15;
+        const playerSpeed = 5;
+
+        // Platform properties
+        const platforms = [];
+        const platformWidth = 150;
+        const platformHeight = 40;
+        const platformColor = '#4caf50'; // Green
+
+        // Game world properties
+        let scrollSpeed = 2;
+        let platformSpawnX = 0;
+
+        // Key input tracking
+        const keysPressed = {};
+
+        // Area code data
+        const areaCodes = {
+            'New York City, NY': ['212', '718', '917', '347'],
+            'Los Angeles, CA': ['213', '310', '424', '323'],
+            'Chicago, IL': ['312', '773'],
+            'Dallas, TX': ['214', '469', '972'],
+            'Miami, FL': ['305', '786'],
+            'Atlanta, GA': ['404', '770', '678', '470'],
+            'Boston, MA': ['617', '857'],
+            'Philadelphia, PA': ['215', '267', '445'],
+            'Denver, CO': ['303', '720'],
+            'Seattle, WA': ['206'],
+            'Houston, TX': ['713', '281', '832'],
+            'Phoenix, AZ': ['602', '480', '623'],
+            'Las Vegas, NV': ['702', '725'],
+            'Washington, D.C.': ['202'],
+            'Salt Lake City, UT': ['801', '385'],
+            'Detroit, MI': ['313'],
+            'San Francisco, CA': ['415', '628']
+        };
+
+        // Get a random area code and question
+        function getRandomAreaCode() {
+            const areas = Object.keys(areaCodes);
+            const randomArea = areas[Math.floor(Math.random() * areas.length)];
+            const randomCode = areaCodes[randomArea][Math.floor(Math.random() * areaCodes[randomArea].length)];
+            return { area: randomArea, code: randomCode };
+        }
+
+        // Reset game state
+        function resetGame() {
+            gameActive = true;
+            score = 0;
+            player.x = 50;
+            player.y = 50;
+            player.velY = 0;
+            player.isJumping = false;
+            player.velX = 0;
+            platforms.length = 0;
+            platformSpawnX = 0;
+            instructionsDiv.style.display = 'none';
+            generateInitialPlatforms();
+        }
+
+        // Generate initial platforms
+        function generateInitialPlatforms() {
+            areaCodeQuestion = getRandomAreaCode();
+            
+            const answers = new Set();
+            answers.add(areaCodeQuestion.code);
+            
+            while (answers.size < 4) {
+                const randomAreaKey = Object.keys(areaCodes)[Math.floor(Math.random() * Object.keys(areaCodes).length)];
+                const incorrectCode = areaCodes[randomAreaKey][Math.floor(Math.random() * areaCodes[randomAreaKey].length)];
+                if (incorrectCode !== areaCodeQuestion.code) {
+                    answers.add(incorrectCode);
+                }
+            }
+
+            const shuffledAnswers = Array.from(answers).sort(() => Math.random() - 0.5);
+
+            platforms.push({ 
+                x: 0, 
+                y: canvas.height - 50, 
+                width: canvas.width, 
+                height: platformHeight,
+                answer: null
+            });
+            platformSpawnX = canvas.width;
+            
+            for (let i = 0; i < shuffledAnswers.length; i++) {
+                generatePlatform(shuffledAnswers[i]);
+            }
+        }
+        
+        // Generate a new platform with an answer
+        function generatePlatform(answer) {
+            const minGap = 150;
+            const maxGap = 300;
+            const minHeight = 100;
+            const maxHeight = canvas.height - 100;
+
+            const x = platformSpawnX + minGap + Math.random() * (maxGap - minGap);
+            const y = minHeight + Math.random() * (maxHeight - minHeight);
+            const width = platformWidth;
+
+            platforms.push({ x, y, width, height: platformHeight, answer: answer });
+            platformSpawnX = x + width + 50;
+        }
+
+        // Draw the player
+        function drawPlayer() {
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+        }
+
+        // Draw platforms with answers
+        function drawPlatforms() {
+            for (const platform of platforms) {
+                ctx.fillStyle = platformColor;
+                ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
+                
+                if (platform.answer) {
+                    ctx.fillStyle = '#fff';
+                    ctx.font = '20px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(platform.answer, platform.x + platform.width / 2, platform.y + platform.height / 2 + 7);
+                }
+            }
+        }
+
+        // Update player's horizontal movement
+        function updatePlayerMovement() {
+            player.velX = 0;
+
+            if (keysPressed['ArrowLeft'] || keysPressed['a']) {
+                player.velX = -playerSpeed;
+            }
+            if (keysPressed['ArrowRight'] || keysPressed['d']) {
+                player.velX = playerSpeed;
+            }
+
+            player.x += player.velX;
+
+            if (player.x < 0) {
+                player.x = 0;
+            }
+            if (player.x + player.width > canvas.width) {
+                player.x = canvas.width - player.width;
+            }
+        }
+
+        // Update game state
+        function update() {
+            if (!gameActive) return;
+
+            updatePlayerMovement();
+
+            player.velY += gravity;
+            player.y += player.velY;
+
+            for (const platform of platforms) {
+                platform.x -= scrollSpeed;
+            }
+
+            while (platforms.length > 0 && platforms[0].x + platforms[0].width < 0) {
+                platforms.shift();
+            }
+            
+            if (platforms.length < 4) {
+                generateNewQuestionPlatforms();
+            }
+
+
+            let onPlatform = false;
+            for (const platform of platforms) {
+                if (
+                    player.x + player.width > platform.x &&
+                    player.x < platform.x + platform.width &&
+                    player.y + player.height > platform.y &&
+                    player.y + player.height < platform.y + player.height + 5 &&
+                    player.velY > 0
+                ) {
+                    player.y = platform.y - player.height;
+                    player.velY = 0;
+                    player.isJumping = false;
+                    onPlatform = true;
+
+                    if (platform.answer === areaCodeQuestion.code) {
+                        score += 10;
+                        platforms.length = 0;
+                        platformSpawnX = canvas.width;
+                        generateNewQuestionPlatforms();
+                    } else if (platform.answer !== null) {
+                        gameActive = false;
+                    }
+                }
+            }
+
+            if (player.y > canvas.height) {
+                gameActive = false;
+            }
+        }
+
+        // Generate platforms for a new question
+        function generateNewQuestionPlatforms() {
+            areaCodeQuestion = getRandomAreaCode();
+            
+            const answers = new Set();
+            answers.add(areaCodeQuestion.code);
+            
+            while (answers.size < 4) {
+                const randomAreaKey = Object.keys(areaCodes)[Math.floor(Math.random() * Object.keys(areaCodes).length)];
+                const incorrectCode = areaCodes[randomAreaKey][Math.floor(Math.random() * areaCodes[randomAreaKey].length)];
+                if (incorrectCode !== areaCodeQuestion.code) {
+                    answers.add(incorrectCode);
+                }
+            }
+
+            const shuffledAnswers = Array.from(answers).sort(() => Math.random() - 0.5);
+            for (let i = 0; i < shuffledAnswers.length; i++) {
+                generatePlatform(shuffledAnswers[i]);
+            }
+        }
+
+        // Draw everything
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawPlatforms();
+            drawPlayer();
+            drawQuestion();
+            drawScore();
+            if (!gameActive) {
+                drawGameOver();
+            }
+        }
+
+        // Draw the question
+        function drawQuestion() {
+            if (areaCodeQuestion.area) {
+                ctx.fillStyle = '#fff';
+                ctx.font = '28px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('What is the area code for ' + areaCodeQuestion.area + '?', canvas.width / 2, 50);
+            }
+        }
+
+        // Draw the score
+        function drawScore() {
+            ctx.fillStyle = '#fff';
+            ctx.font = '24px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText('Score: ' + score, 10, 30);
+        }
+
+        // Draw game over message
+        function drawGameOver() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#fff';
+            ctx.font = '50px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Game Over', canvas.width / 2, canvas.height / 2);
+            ctx.font = '20px Arial';
+            ctx.fillText('Final Score: ' + score, canvas.width / 2, canvas.height / 2 + 50);
+            ctx.fillText('Press SPACE to Restart', canvas.width / 2, canvas.height / 2 + 90);
+        }
+
+        // Game loop
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Event listeners for player input
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && !player.isJumping && gameActive) {
+                player.velY = jumpStrength;
+                player.isJumping = true;
+            } else if (e.code === 'Space' && !gameActive) {
+                resetGame();
+            }
+
+            if (e.code === 'ArrowLeft' || e.code === 'KeyA') {
+                keysPressed['ArrowLeft'] = true;
+            }
+            if (e.code === 'ArrowRight' || e.code === 'KeyD') {
+                keysPressed['ArrowRight'] = true;
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            if (e.code === 'ArrowLeft' || e.code === 'KeyA') {
+                keysPressed['ArrowLeft'] = false;
+            }
+            if (e.code === 'ArrowRight' || e.code === 'KeyD') {
+                keysPressed['ArrowRight'] = false;
+            }
+        });
+
+        gameLoop();
+    </script>
+</body>
+</html>

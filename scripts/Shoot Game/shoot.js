@@ -8,7 +8,6 @@ let gameRunning = false;
 let score = 0;
 let screenShrink = 0;
 let hitboxesVisible = false;
-let gameSpeedMultiplier = 1;
 
 // --- New laser properties ---
 const laser = {
@@ -29,10 +28,10 @@ const player = {
 	y: canvas.height / 2,
 	size: 60,
 	speedY: 0,
-	gravity: 0.25 * gameSpeedMultiplier,
+	gravity: 0.25,
 	jumpPower: -6,
 	isPressingSpace: false,
-	upwardSpeed: -6 * gameSpeedMultiplier,
+	upwardSpeed: -6,
 	easingFactor: 0.1,
 };
 
@@ -245,46 +244,59 @@ function startScreenShake(targetElement, duration = 400, intensity = 5) {
 const obstacles = [];
 let obstacleSpawnRate = 10;
 let obstacleSpawnCounter = 0;
-const obstacleSpeed = 10 * gameSpeedMultiplier;
+const obstacleSpeed = 10;
 const pipeGap = 150;
 const pipeWidth = 80;
 
 function createObstacle() {
-	const obstacleType = Math.random();
+  const obstacleType = Math.random();
+  const planetSize = 150; // Set a specific size for the planet
 
-	if (obstacleType < 0.02) {
-		const minGapY = 100;
-		const maxGapY = canvas.height - 100 - pipeGap;
-		const gapY = Math.random() * (maxGapY - minGapY) + minGapY;
-		obstacles.push({
-			x: canvas.width,
-			y: 0,
-			width: pipeWidth,
-			height: gapY,
-			speedX: -obstacleSpeed,
-			image: loadedImages.building_top,
-			type: "building",
-		});
-		obstacles.push({
-			x: canvas.width,
-			y: gapY + pipeGap,
-			width: pipeWidth,
-			height: canvas.height - (gapY + pipeGap),
-			speedX: -obstacleSpeed,
-			image: loadedImages.building_bottom,
-			type: "building",
-		});
-	} else {
-		obstacles.push({
-			x: canvas.width + 50,
-			y: Math.random() * (canvas.height - 50) + 25,
-			width: 40,
-			height: 40,
-			speedX: -(obstacleSpeed + Math.random() * 3),
-			image: loadedImages.bird,
-			type: "bird",
-		});
-	}
+  if (obstacleType < 0.01) { // 1% chance for a large planet
+    obstacles.push({
+      x: canvas.width,
+      y: Math.random() * (canvas.height - planetSize),
+      width: planetSize,
+      height: planetSize,
+      speedX: -(obstacleSpeed * 0.5), // Planets move slower
+      image: loadedImages.planet,
+      type: "planet",
+    });
+  } else if (obstacleType < 0.03) { // 2% chance for buildings (0.01 to 0.03)
+    const minGapY = 100;
+    const maxGapY = canvas.height - 100 - pipeGap;
+    const gapY = Math.random() * (maxGapY - minGapY) + minGapY;
+    obstacles.push({
+      x: canvas.width,
+      y: 0,
+      width: pipeWidth,
+      height: gapY,
+      speedX: -obstacleSpeed,
+      image: loadedImages.building_top,
+      type: "building",
+    });
+    obstacles.push({
+      x: canvas.width,
+      y: gapY + pipeGap,
+      width: pipeWidth,
+      height: canvas.height - (gapY + pipeGap),
+      speedX: -obstacleSpeed,
+      image: loadedImages.building_bottom,
+      type: "building",
+    });
+  } else { // All other times, a bird (0.03 to 1.0)
+    obstacles.push({
+      x: canvas.width + 50,
+      y: Math.random() * (canvas.height - 50) + 25,
+      width: 40,
+      height: 40,
+      speedX: -(obstacleSpeed + Math.random() * 3),
+      image: loadedImages.bird,
+      type: "bird",
+    });
+  }
+}
+
 }
 
 // Game loop
@@ -510,7 +522,7 @@ function gameLoop() {
 			}
 		}
 
-		// Collision detection for player and obstacles
+		//  detection for player and obstacles
 		if (
 			player.x + player.size - 12 > obs.x &&
 			player.x + 12 < obs.x + obs.width &&
@@ -789,6 +801,7 @@ function particleLoop() {
 			player.y < bomb.y + bomb.size &&
 			player.y + player.size > bomb.y
 		) {
+			Window.close();
 			// Pass the bomb object to the function
 			activateBomb(bomb);
 			bombs.splice(i, 1); // Remove the collected bomb
